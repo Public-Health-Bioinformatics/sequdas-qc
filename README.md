@@ -1,1 +1,1 @@
-# sequdas-qc
+# SeqUDAS Quality Control Analysis Component
