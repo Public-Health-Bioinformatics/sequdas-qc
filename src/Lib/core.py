@@ -16,8 +16,9 @@ def run_parameter(argv):
     run_uploader="False"
     sequdas_id=""
     send_email_switch="False"
+    cluster = "False"
     try:
-        opts, args = getopt.getopt(argv,"hi:o:s:tkxneu:",["help", "in_dir=","out_dir="])
+        opts, args = getopt.getopt(argv,"hi:o:s:tckxneu:",["help", "in_dir=","out_dir="])
     except getopt.GetoptError:   	  
         usage()      
         sys.exit(2)
@@ -31,6 +32,8 @@ def run_parameter(argv):
             outfile = arg
         elif opt in ("-s", "--step"):
             step = arg
+        elif opt == '-c':
+            cluster = "True"
         elif opt in ("-u"):
             sequdas_id = arg
         elif opt =='-t':
@@ -48,7 +51,7 @@ def run_parameter(argv):
     if len(inputfile)<1 or len(outfile)<1:
         usage()      
         sys.exit(2)
-    return (inputfile, outfile,step,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch)
+    return (inputfile, outfile,step,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch, cluster)
         
 def usage():
     usage = """
@@ -63,8 +66,11 @@ def usage():
        step 3: Run MultiQC
        step 4: Run Kraken
        step 5: Run Kaiju
-       step 6: Run IRIDA uploader
+       step 6: Run Kraken 2
+       step 7: Run IRIDA uploader
     -u Sequdas id
+    -c 
+        Run jobs on cluster
     -e
        False: won't send email (default)
        True: send email.    
@@ -111,6 +117,8 @@ def copy_reporter(out_dir,run_folder_name):
     s_config=sequdas_config()
     ssh_host_report=s_config['reporter']['reporter_ssh_host']
     QC_img_dir=s_config['reporter']['qc_dir']
+    print ssh_host_report
+    print QC_img_dir
     rsynccmd = 'rsync -trvh --chmod=Du=rwx,Dog=rx,Fu=rwx,Fgo=rx -O '+ out_dir+"/"+run_folder_name +' '+ssh_host_report+':' + QC_img_dir
     rsyncproc = subprocess.call(rsynccmd,shell=True)
     return rsyncproc
