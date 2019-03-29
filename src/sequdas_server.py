@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 ######################################################################
-#								     #
+#																											               #
 # BCCDC MiSEQ Archiving System (Sequdas)                             #
-#	                                 			     #
-# Version 1.5							     #
-#								     #
-# 2017-11-30							     #
-#								     #
+#	                                 										               #
+# Version 1.5																			                   #
+#																											               #
+# 2017-11-30													                               #
+#																											               #
 # Jun Duan                                                           #
 # BCCDC Public Health Laboratory                                     #
 # University of British Columbia                                     #
@@ -22,6 +22,8 @@
 # Tel: 604-707-2561                                                  #
 # Fax: 604-707-2603                                                  #
 ######################################################################
+#/data/miseq/MiSEQ_bakup_data/JUDY2/DATA_2017/DEMO3_completed_run1
+#python /data/miseq/sequdas_server/sequdas_server.py -i /data/miseq/MiSEQ_bakup_data/BAM/DATA_2017/ DEMO3_completed_run2 -o test -s 1
 
 import sys
 import re
@@ -43,11 +45,12 @@ import json
                         
 
 def main(argv):
-    (input_dir, out_dir,step_id,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch)=run_parameter(argv)
+    (input_dir, out_dir,step_id,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch, cluster)=run_parameter(argv)
     run_style=str2bool(run_style)
     keep_kraken=str2bool(keep_kraken)
     run_uploader=str2bool(run_uploader)
     send_email_switch=str2bool(send_email_switch)
+    cluster = str2bool(cluster)
     run_name=os.path.basename(os.path.normpath(input_dir))
     run_analysis_folder=out_dir+"/"+run_name
     check_folder(out_dir)
@@ -68,6 +71,11 @@ def main(argv):
     split_pattern = re.compile(r"[;,]")
     email_list_admin=split_pattern.split(admin_emails)
     email_list=email_list_admin
+    server_dir = s_config['basic']['server_dir']
+    db = s_config['kraken']['db']
+    krona = s_config['conda']['krona']
+    interop = s_config['conda']['interop']
+    irida = s_config['uploader']['irida']
     if send_email_switch is True:
         sample_sheets=[input_dir+"/"+"SampleSheet.csv"]
         metadata=parse_metadata(sample_sheets[0])
@@ -92,7 +100,8 @@ def main(argv):
     #################################
     if(step_id==1):
         try:
-            run_machine_QC(input_dir,out_dir)
+            run_machine_QC(input_dir,out_dir,interop)
+            filter_sheet(input_dir,out_dir)
             copy_reporter(out_dir,run_name)
             status=1
         except:
@@ -107,13 +116,22 @@ def main(argv):
             status_update(sequdas_id,step_id,status)
         if run_style is True:
             step_id=step_id+1
+        filter_sheet(input_dir,out_dir)
     if(step_id==2):
-        try:
-            run_fastqc(input_dir,out_dir)
-            copy_reporter(out_dir,run_name)
-            status=1
-        except:
-            status=0
+        if cluster == True:
+            try:
+                run_fastqc_cluster(input_dir,out_dir,server_dir)
+                copy_reporter(out_dir,run_name)
+                status=1
+            except:
+                status=0
+        if cluster == False:
+            try:
+                run_fastqc(input_dir,out_dir,server_dir)
+                copy_reporter(out_dir,run_name)
+                status=1
+            except:
+                status=0
         update_pipe_status(logfile,run_name,str(step_id),status)
         if log_details is True:
             if (status==1):
@@ -175,9 +193,35 @@ def main(argv):
             status_update(sequdas_id,step_id,status)            
         if run_style is True:
             step_id=step_id+1
-    if(step_id==6 and run_uploader is True):
+    if(step_id==6):
+        if cluster == True:
+            try:
+                run_kraken2_cluster(input_dir,out_dir,keep_kraken,db,krona,server_dir)
+                copy_reporter(out_dir,run_name)
+                status=1
+            except:
+                status=0
+        if cluster == False:
+            try:
+                run_kraken2(input_dir,out_dir,keep_kraken, db, krona, server_dir)
+                copy_reporter(out_dir,run_name)
+                status=1
+            except:
+                status=0
+        update_pipe_status(logfile,run_name,str(step_id),status)
+        if log_details is True:
+            if (status==1):
+               logger.info("step"+str(step_id)+" has been finished"+"\n")
+            else:
+               logger.info("There is something wrong with step"+str(step_id)+" . Please check!"+"\n")
+        if len(sequdas_id)>0:
+            status_update(sequdas_id,step_id,status)            
+        if run_style is True:
+            step_id=step_id+1
+    if(step_id==7 and run_uploader is True):
         try:
-            Upload_to_Irida(input_dir)
+            filter_sheet(input_dir,out_dir)
+            Upload_to_Irida(input_dir, irida)
             status=1
         except:
             status=0
