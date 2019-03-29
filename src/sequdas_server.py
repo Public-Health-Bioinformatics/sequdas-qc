@@ -73,7 +73,8 @@ def main(argv):
     email_list=email_list_admin
     server_dir = s_config['basic']['server_dir']
     db = s_config['kraken']['db']
-    krona = s_config['kraken']['krona']
+    krona = s_config['conda']['krona']
+    interop = s_config['conda']['interop']
     irida = s_config['uploader']['irida']
     if send_email_switch is True:
         sample_sheets=[input_dir+"/"+"SampleSheet.csv"]
@@ -99,7 +100,7 @@ def main(argv):
     #################################
     if(step_id==1):
         try:
-            run_machine_QC(input_dir,out_dir)
+            run_machine_QC(input_dir,out_dir,interop)
             filter_sheet(input_dir,out_dir)
             copy_reporter(out_dir,run_name)
             status=1

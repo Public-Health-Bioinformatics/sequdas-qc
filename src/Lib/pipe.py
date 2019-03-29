@@ -8,7 +8,7 @@ import time
 from Lib.core import * 
 from subprocess import Popen
 
-def run_machine_QC(directory,out_dir):
+def run_machine_QC(directory,out_dir,interop):
     command_list1=["plot_by_cycle","plot_by_lane","plot_flowcell","plot_qscore_histogram","plot_qscore_heatmap","plot_sample_qc"]
     command_list2=["summary","index-summary"]
     filetype_list=["_ClusterCount-by-lane.png","_flowcell-Intensity.png","_Intensity-by-cycle_Intensity.png","_q-heat-map.png","_q-histogram.png","_sample-qc.png"]
@@ -22,7 +22,7 @@ def run_machine_QC(directory,out_dir):
         filename_output=run_analysis_folder+"/"+run_folder_name+"_"+command+".csv"
         try: 
             with open(filename_output, 'w') as output_file:
-                p1 = subprocess.Popen([command,directory],stdout=output_file)
+                p1 = subprocess.Popen([interop+"/"+command,directory],stdout=output_file)
             output_file.close()
             a=p1.wait()            
             if(a==0):
@@ -38,7 +38,7 @@ def run_machine_QC(directory,out_dir):
         print filename_output
         try: 
             with open(filename_output, 'w') as output_file:
-                p1 = subprocess.Popen([command,directory],stdout=output_file)
+                p1 = subprocess.Popen([interop+"/"+command,directory],stdout=output_file)
             output_file.close()
             a=p1.wait()                              
         except:
@@ -113,7 +113,7 @@ def run_fastqc_cluster(directory,out_dir,server_dir):
                 path_r = fastq_file_location + path_r
                 subprocess.call("qsub "+server_dir+"/Cluster/coverage.sh "+ path_f +" " + path_r +" " +run_analysis_folder + " " + run_folder_name + " " +each_sample+" "+server_dir, shell = True)
     except:
-        print "Error, check samplesheet, job may however still be continuing..."
+        print "There was an issue with the samplesheet, continuing..."
     wait_until("sequdas_coverage")
     with open(run_analysis_folder+"/"+run_folder_name+"_"+'coverage.txt', 'w') as outfile:
         json.dump(create_sample_dict_cluster(directory, run_analysis_folder, run_folder_name), outfile)
@@ -400,21 +400,11 @@ def Upload_to_Irida(directory,irida):
 
 #Check genus length from list of known quantities
 def get_genus_length(genus):
-    if genus == "Listeria":
-        return "3000000"
-    elif genus == "E.coli":
-        return "5000000"
-    elif genus == "Escherichia":
-        return "5000000"
-    elif genus == "Shigella":
-        return "5000000"
-    elif genus == "Salmonella":
-        return "5000000"
-    elif genus == "campylobacter":
-        return "1600000"
-    elif genus == "Campylobacter":
-        return "1600000"
-    else:
+    lower_genus = genus.lower()
+    s_config = sequdas_config()
+    try:
+        return s_config['genus'][lower_genus]
+    except:
         return "INVALID GENUS"
 
 #density functions
@@ -504,7 +494,7 @@ def create_sample_dict(directory):
                 length = (int(read_length_store)/int(genus_length))
                 dict["coverage_estimation"] = str(length)
             else:
-                dict["coverage_estimation"] = "Genus length is missing from sequdas"
+                dict["coverage_estimation"] = "Genus length is not in sequdas but can be added"
             print dict
             list_dict_sample.append(dict)
     return list_dict_sample
@@ -541,7 +531,7 @@ def create_sample_dict_cluster(directory, run_analysis_folder, run_folder_name):
                 length = (int(read_length_store)/int(genus_length))
                 dict["coverage_estimation"] = str(length)
             else:
-                dict["coverage_estimation"] = "Genus length is missing from Sequdas"
+                dict["coverage_estimation"] = "Genus length is not in sequdas but can be added"
             print dict
             list_dict_sample.append(dict)
     return list_dict_sample
@@ -607,7 +597,12 @@ def make_sample_list(list):
     sample_list = []
     for element in list:
         if element[0] != "Sample_ID":
-            sample_list.append(re.sub(r"_", '-', element[0]))
+            addition = re.sub(r"_", '-', element[0])
+            addition = re.sub(r"/", '-', addition)
+            addition = re.sub(r"\.", '-', addition)
+            addition = re.sub(r" ", '-', addition)
+            addition = re.sub(r"\s+", '-', addition)
+            sample_list.append(addition)
     if sample_list[0] == "":
         sample_list = []
         for element in list:
@@ -642,11 +637,11 @@ def cover(name,coverage):
         dict = {}
         for key, value in each.iteritems():
             if key =="coverage_estimation":
-                if value =="Genus length is missing from Sequdas":
+                if value =="Genus length is not in sequdas but can be added":
                     genus = genus_kraken(name+each["sample_id"] +"_kraken2_report.txt")
                     if get_genus_length(genus) != "INVALID GENUS":
                         coverage_est = int(each["read_length"])/int(get_genus_length(genus))
-                        value = "Coverage not found, however Kraken2 estimted coverage as: "+ str(coverage_est)
+                        value = "Genus in sample sheet was not found, however Kraken2 estimted coverage as: "+ str(coverage_est)
             dict[key] = value
         new.append(dict)
     with open(name+coverage+"_coverage.txt", 'w') as outfile: 
@@ -694,6 +689,7 @@ def filter_sheet(input_dir, output_dir):
             os.rename(out + '/newfile.csv',out + '/SampleSheet.csv')
     except:
         ""
+        
 #check that cluster job has finished
 def wait_until(job):
     regex = ur"<JB_name>(.+?)</JB_name>+?"
