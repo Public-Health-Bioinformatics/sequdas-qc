@@ -16,10 +16,6 @@ setup (
     		'sequdas=sequdas_qc.sequdas_qc:main'
     	]
     },
-    install_requires=[
-        mysql-python,
-        validate_email,
-    ],
     project_urls={
         "Source Code": "https://github.com/Public-Health-Bioinformatics/sequdas-qc",
         "Documentation": "https://github.com/Public-Health-Bioinformatics/sequdas-qc",
