@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 ######################################################################
-#																											               #
+#								     #
 # BCCDC MiSEQ Archiving System (Sequdas)                             #
-#	                                 										               #
-# Version 1.5																			                   #
-#																											               #
-# 2017-11-30													                               #
-#																											               #
+#	                                 			     #
+#								     #
+#								     #
 # Jun Duan                                                           #
 # BCCDC Public Health Laboratory                                     #
 # University of British Columbia                                     #
@@ -22,19 +20,17 @@
 # Tel: 604-707-2561                                                  #
 # Fax: 604-707-2603                                                  #
 ######################################################################
-#/data/miseq/MiSEQ_bakup_data/JUDY2/DATA_2017/DEMO3_completed_run1
-#python /data/miseq/sequdas_server/sequdas_server.py -i /data/miseq/MiSEQ_bakup_data/BAM/DATA_2017/ DEMO3_completed_run2 -o test -s 1
 
 import sys
 import re
 import shutil
 import logging
-from Lib.core import *
-from Lib.status_log import *
-from Lib.sample_sheet import *
-from Lib.pipe import *
-from Lib.status_db import *
-from Lib.message import *
+from .lib.core import *
+from .lib.status_log import *
+from .lib.sample_sheet import *
+from .lib.pipe import *
+from .lib.status_db import *
+from .lib.message import *
 import json
 
 # S1: MiSeq reporter 4

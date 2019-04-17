@@ -1,5 +1,5 @@
 import os
-from Lib.sample_sheet import *
+from .sample_sheet import *
 import subprocess
 import getopt
 import ConfigParser

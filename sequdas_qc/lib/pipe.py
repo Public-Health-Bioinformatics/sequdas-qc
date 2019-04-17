@@ -5,7 +5,7 @@ import re
 import json
 import csv
 import time
-from Lib.core import * 
+from .core import * 
 from subprocess import Popen
 
 def run_machine_QC(directory,out_dir,interop):

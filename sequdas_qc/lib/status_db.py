@@ -1,6 +1,6 @@
 import MySQLdb
 import time
-from Lib.core import *
+from .core import *
 
 
 s_config=sequdas_config()
