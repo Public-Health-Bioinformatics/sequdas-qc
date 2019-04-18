@@ -1,5 +1,5 @@
 import os
-from .sample_sheet import *
+from sequdas_qc.lib.sample_sheet import *
 import subprocess
 import getopt
 import ConfigParser

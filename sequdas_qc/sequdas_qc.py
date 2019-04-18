@@ -40,7 +40,9 @@ import json
 # S5: IRIDA uploader 8
                         
 
-def main(argv):
+def main(argv = None):
+    if argv is None:
+        argv = sys.argv
     (input_dir, out_dir,step_id,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch, cluster)=run_parameter(argv)
     run_style=str2bool(run_style)
     keep_kraken=str2bool(keep_kraken)

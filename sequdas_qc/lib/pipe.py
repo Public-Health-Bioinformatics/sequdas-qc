@@ -5,7 +5,7 @@ import re
 import json
 import csv
 import time
-from .core import * 
+from sequdas_qc.lib.core import * 
 from subprocess import Popen
 
 def run_machine_QC(directory,out_dir,interop):
