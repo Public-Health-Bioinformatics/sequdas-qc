@@ -1,0 +1,4 @@
+include *.txt
+recursive-include sequdas_qc/Conf * .ini
+recursive-include sequdas_qc/cluster * .py
+recursive-include sequdas_qc/lib * .py
