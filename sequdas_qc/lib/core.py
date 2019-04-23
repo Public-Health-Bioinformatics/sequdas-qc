@@ -1,109 +1,56 @@
 import os
-from sequdas_qc.lib.sample_sheet import *
 import subprocess
-import getopt
+import argparse
 import ConfigParser
 import shutil
 import sys
 from validate_email import validate_email
 
-def run_parameter(argv):
-    inputfile = ''
-    outfile=''
-    run_style="False"
-    keep_kraken="False"
-    keep_kaiju="False"
-    run_uploader="False"
-    sequdas_id=""
-    send_email_switch="False"
-    cluster = "False"
-    try:
-        opts, args = getopt.getopt(argv,"hi:o:s:tckxneu:",["help", "in_dir=","out_dir="])
-    except getopt.GetoptError:   	  
-        usage()      
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt == '-h':
-            usage()
-            sys.exit()
-        elif opt in ("-i", "--in_dir"):
-            inputfile = arg
-        elif opt in ("-o", "--out_dir"):
-            outfile = arg
-        elif opt in ("-s", "--step"):
-            step = arg
-        elif opt == '-c':
-            cluster = "True"
-        elif opt in ("-u"):
-            sequdas_id = arg
-        elif opt =='-t':
-            run_style = "True"
-        elif opt =='-k':
-            keep_kraken = "True"
-        elif opt =='-x':
-            keep_kaiju = "True"
-        elif opt =='-n':
-            run_uploader = "True"
-        elif opt =='-e':
-            send_email_switch = "True"
-        else:
-            inputfile=""
-    if len(inputfile)<1 or len(outfile)<1:
-        usage()      
-        sys.exit(2)
-    return (inputfile, outfile,step,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch, cluster)
-        
-def usage():
-    usage = """
-    sequdas_server.py -i <input_directory> -o <output_directory>
-    
-    -h --help
-    -i --in_dir    input_directory (required)
-    -o --out_dir    input_directory  (required)
-    -s --step  step (required)
-       step 1: Run MiSeq reporter
-       step 2: Run FastQC
-       step 3: Run MultiQC
-       step 4: Run Kraken
-       step 5: Run Kaiju
-       step 6: Run Kraken 2
-       step 7: Run IRIDA uploader
-    -u Sequdas id
-    -c 
-        Run jobs on cluster
-    -e
-       False: won't send email (default)
-       True: send email.    
-    -n
-       False: won't run the IRIDA uploader (default)
-       True: run IRIDA uploader.
-    -t 
-       False: only on step (default)
-       True: run current step and the followings.
-    -k
-       False: won't keep the Kraken intermediate result (default)
-       True: keep the Kraken intermediate result
-    -x
-       False: won't keep the Kaiju intermediate result (default)
-       True: keep the Kaiju intermediate result
-       
-    """
-    print(usage)
+from sequdas_qc.lib.sample_sheet import *
+import sequdas_qc.conf
 
-def sequdas_config():
+def run_parameter(argv):
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-i', "--in_dir", dest='inputfile', help="Input directory", required=True)
+    parser.add_argument('-o', "--out_dir", dest='outfile', help="Output directory", required=True)
+    parser.add_argument('-s', "--step", dest='step', help="step 1: Run MiSeq reporter\nstep 2: Run FastQC\nstep 3: Run MultiQC\nstep 4: Run Kraken\nstep 5: Run Kaiju\nstep 6: Run Kraken 2\nstep 7: Run IRIDA uploader", required=True)
+    parser.add_argument('-C', "--config", dest='config_file_path', help="SeqUDAS config file", default=os.path.join(os.path.dirname(sequdas_qc.conf.__file__), "config.ini"))
+    parser.add_argument('-u', "--sequdas_id", dest='sequdas_id', help="SeqUDAS ID", default="")
+    parser.add_argument('-c', "--cluster", dest='cluster', help="Run analyses on HPC Cluster using DRMAA", default="False")
+    parser.add_argument('-t', "--run_style", dest='run_style', action='store_true')
+    parser.add_argument('-k', "--keep_kraken", dest='keep_kraken', help="Keep intermediate output files from kraken analysis", action='store_true')
+    parser.add_argument('-x', "--keep_kaiju", dest='keep_kaiju', help="Keep intermediate output files from kaiju analysis", action='store_true')
+    parser.add_argument('-n', "--run_uploader", dest='run_uploader', help="Run IRIDA uploader", action='store_true')
+    parser.add_argument('-e', "--send_email", dest='send_email_switch', help="Send notification emails", action='store_true')
+    args = parser.parse_args()
+
+    return (
+        args.inputfile,
+        args.outfile,
+        args.step,
+        args.run_style,
+        args.keep_kraken,
+        args.keep_kaiju,
+        args.run_uploader,
+        args.sequdas_id,
+        args.send_email_switch,
+        args.cluster,
+        args.config_file_path,
+    )
+
+def sequdas_config(config_file_path):
     try:
-        config=read_config()
+        config=read_config(config_file_path)
         confdict = {section: dict(config.items(section)) for section in config.sections()}
         return confdict
     except Exception as e :
         print(str(e),' Could not read configuration file')
 
-def read_config():
+def read_config(config_file_path):
     config = ConfigParser.RawConfigParser()
-    pathname = os.path.dirname(os.path.abspath(sys.argv[0]))
-    configFilePath = pathname+"/"+"Conf/config.ini"
     try:
-        config.read(configFilePath)
+        config.read(config_file_path)
         return config
     except Exception as e :
         print(str(e))

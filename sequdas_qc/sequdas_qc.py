@@ -43,17 +43,12 @@ import json
 def main(argv = None):
     if argv is None:
         argv = sys.argv
-    (input_dir, out_dir,step_id,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch, cluster)=run_parameter(argv)
-    run_style=str2bool(run_style)
-    keep_kraken=str2bool(keep_kraken)
-    run_uploader=str2bool(run_uploader)
-    send_email_switch=str2bool(send_email_switch)
-    cluster = str2bool(cluster)
+    (input_dir, out_dir,step_id,run_style,keep_kraken,keep_kaiju,run_uploader,sequdas_id,send_email_switch, cluster, config_file_path)=run_parameter(argv)
     run_name=os.path.basename(os.path.normpath(input_dir))
     run_analysis_folder=out_dir+"/"+run_name
     check_folder(out_dir)
     check_folder(run_analysis_folder)
-    s_config=sequdas_config()
+    s_config=sequdas_config(config_file_path)
     logfile_dir=s_config['basic']['logfile_dir']
     logfile_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)),s_config['basic']['logfile_dir'])
     logfile_dir=check_path_with_slash(logfile_dir)
@@ -74,6 +69,12 @@ def main(argv = None):
     krona = s_config['conda']['krona']
     interop = s_config['conda']['interop']
     irida = s_config['uploader']['irida']
+    db_config = {
+        'passwd': s_config['mysql_account']['mysql_passwd'],
+        'host': s_config['mysql_account']['mysql_host'],
+        'user': s_config['mysql_account']['mysql_user'],
+        'db': s_config['mysql_account']['mysql_db'],
+    }
     if send_email_switch is True:
         sample_sheets=[input_dir+"/"+"SampleSheet.csv"]
         metadata=parse_metadata(sample_sheets[0])
@@ -111,7 +112,7 @@ def main(argv = None):
             else:
                logger.info("There is something wrong with step"+str(step_id)+" . Please check!"+"\n")
         if len(sequdas_id)>0:
-            status_update(sequdas_id,step_id,status)
+            status_update(db_config, sequdas_id,step_id,status)
         if run_style is True:
             step_id=step_id+1
         filter_sheet(input_dir,out_dir)
