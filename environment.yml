@@ -1,0 +1,17 @@
+name: sequdas-qc
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=2.7
+  - kraken2
+  - krona
+  - illumina-interop
+  - samtools
+  - fastqc
+  - rauth
+  - bzip2
+  - validate_email
+  - mysql-python
+  - hashdeep
