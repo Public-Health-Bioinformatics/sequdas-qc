@@ -1,1 +1,2 @@
 include sequdas_qc/conf/config.ini
+recursive-include sequdas_qc/cluster * .py
