@@ -5,10 +5,10 @@ import re
 import json
 import csv
 import time
-from sequdas_qc.lib.core import * 
+from sequdas_qc.lib.core import *
 from subprocess import Popen
 
-def run_machine_QC(directory,out_dir,interop):
+def run_machine_QC(directory,out_dir):
     command_list1=["plot_by_cycle","plot_by_lane","plot_flowcell","plot_qscore_histogram","plot_qscore_heatmap","plot_sample_qc"]
     command_list2=["summary","index-summary"]
     filetype_list=["_ClusterCount-by-lane.png","_flowcell-Intensity.png","_Intensity-by-cycle_Intensity.png","_q-heat-map.png","_q-histogram.png","_sample-qc.png"]
@@ -20,34 +20,34 @@ def run_machine_QC(directory,out_dir,interop):
     subprocess.call(['chmod', '755', run_analysis_folder+"/"+"SampleSheet.csv"])
     for command in command_list1:
         filename_output=run_analysis_folder+"/"+run_folder_name+"_"+command+".csv"
-        try: 
+        try:
             with open(filename_output, 'w') as output_file:
-                p1 = subprocess.Popen([interop+"/"+command,directory],stdout=output_file)
+                p1 = subprocess.Popen([command,directory],stdout=output_file)
             output_file.close()
-            a=p1.wait()            
+            a=p1.wait()
             if(a==0):
                 try:
                     plot_command='gnuplot '+filename_output
                     run_plot = subprocess.Popen(plot_command,shell=True,stdout=subprocess.PIPE,)
                 except:
-                    print "Error, please check gnuplot!"                            
+                    print "Error, please check gnuplot!"
         except:
             print "Errors, please check "+command
     for command in command_list2:
         filename_output=run_analysis_folder+"/"+run_folder_name+"_"+command+".txt"
         print filename_output
-        try: 
+        try:
             with open(filename_output, 'w') as output_file:
-                p1 = subprocess.Popen([interop+"/"+command,directory],stdout=output_file)
+                p1 = subprocess.Popen([command,directory],stdout=output_file)
             output_file.close()
-            a=p1.wait()                              
+            a=p1.wait()
         except:
-            print "Errors, please check "+command 
+            print "Errors, please check "+command
 
     try:######################################################### Create density file
-        with open(run_analysis_folder+"/"+run_folder_name+"_"+'density.txt', 'w') as outfile:  
+        with open(run_analysis_folder+"/"+run_folder_name+"_"+'density.txt', 'w') as outfile:
             json.dump(get_mean(create_dict(read_file_inline(run_analysis_folder+"/"+run_folder_name+"_"+"summary.txt"))), outfile)
-    except: 
+    except:
         print "Errors, please check summary"
 
     for extention in filetype_list:
@@ -71,13 +71,13 @@ def run_fastqc(directory,out_dir, server_dir):
         matchObj = re.match( r'(.*)\_S\d+\_L\d{3}\_(R\d+)\_\S+(_fastqc.html)', fastqc_result, re.M|re.I)
         if matchObj:
             if(matchObj.group(2)=="R1"):
-                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_F.html")                  
+                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_F.html")
             if(matchObj.group(2)=="R2"):
-                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_R.html")   
+                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_R.html")
     try:######################################################### Create coverage file
-        with open(run_analysis_folder+"/"+run_folder_name+"_"+'coverage.txt', 'w') as outfile: 
+        with open(run_analysis_folder+"/"+run_folder_name+"_"+'coverage.txt', 'w') as outfile:
             json.dump((create_sample_dict( directory)), outfile)
-    except: 
+    except:
         print "Errors, please check spreadsheet"
 
 ##fix
@@ -95,9 +95,9 @@ def run_fastqc_cluster(directory,out_dir,server_dir):
         matchObj = re.match( r'(.*)\_S\d+\_L\d{3}\_(R\d+)\_\S+(_fastqc.html)', fastqc_result, re.M|re.I)
         if matchObj:
             if(matchObj.group(2)=="R1"):
-                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_F.html")                  
+                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_F.html")
             if(matchObj.group(2)=="R2"):
-                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_R.html")   
+                shutil.copy2(fastq_file_location+"/"+fastqc_result, run_analysis_folder+"/"+matchObj.group(1)+"_R.html")
     try:
         rough_list = read_data_csv(directory)
         sample_list = make_sample_list(rough_list)
@@ -128,7 +128,7 @@ def run_multiQC(directory,out_dir):
     run_analysis_folder=out_dir+"/"+run_folder_name
     check_folder(run_analysis_folder)
     fastq_file_location=directory+"/Data/Intensities/BaseCalls"
-    p2 = subprocess.call(['multiqc','-n',multQC_result,'-f',fastq_file_location,'-o',run_analysis_folder]) 
+    p2 = subprocess.call(['multiqc','-n',multQC_result,'-f',fastq_file_location,'-o',run_analysis_folder])
 
 
 def run_kraken(directory,out_dir,keep_kraken):
@@ -149,7 +149,7 @@ def run_kraken(directory,out_dir,keep_kraken):
                     fastq_file_dict[key]=fastq_file
     for sample in sample_list:
         if(len(sample['sampleName'])==0 and len(sample['sequencerSampleId'])==0):
-           continue     
+           continue
         if(len(sample['sampleName'])>0):
             sample_name_t=sample['sampleName']
         else:
@@ -165,11 +165,11 @@ def run_kraken(directory,out_dir,keep_kraken):
            p3_1 = subprocess.call(['kraken' ,'--preload','--threads','2','--db','/data/miseq/0.db/1.kraken_db/minikraken_20141208','--paired','--check-names','--output',run_analysis_folder+"/"+sample_name_t+"_kraken.out",'--fastq-input','--gzip-compressed',fq_F,fq_R])
            kraken_result_file=run_analysis_folder+"/"+sample_name_t+"_kraken.out"
            kraken_report_file=run_analysis_folder+"/"+sample_name_t+"_kraken_report.txt"
-           with open(kraken_report_file, 'w') as output_file:                            
+           with open(kraken_report_file, 'w') as output_file:
                p3_2 = subprocess.call(['kraken-report','--db','/data/miseq/0.db/1.kraken_db/minikraken_20141208',kraken_result_file],stdout=output_file)
            output_file.close()
            kraken_json_file=run_analysis_folder+"/"+sample_name_t+"_kraken.js"
-            
+
            with open(kraken_json_file, 'w') as output_file:
                p3_3=subprocess.call(['python','/data/miseq/kraken_parse.py','G','2','5',kraken_report_file],stdout=output_file)
            output_file.close()
@@ -182,9 +182,9 @@ def run_kraken(directory,out_dir,keep_kraken):
            if(keep_kraken is False):
                p3_6= subprocess.call(['rm','-fr', kraken_result_file])
                p3_7= subprocess.call(['rm','-fr', kraken_sorted_for_krona])
-        except:     
+        except:
            print "error,please check Kraken"
-   
+
 
 def run_kaiju(directory,out_dir,keep_kaiju):
     run_folder_name=os.path.basename(os.path.normpath(directory))
@@ -204,7 +204,7 @@ def run_kaiju(directory,out_dir,keep_kaiju):
                     fastq_file_dict[key]=fastq_file
     for sample in sample_list:
         if(len(sample['sampleName'])==0 and len(sample['sequencerSampleId'])==0):
-           continue     
+           continue
         if(len(sample['sampleName'])>0):
             sample_name_t=sample['sampleName']
         else:
@@ -234,7 +234,7 @@ def run_kaiju(directory,out_dir,keep_kaiju):
                p4_6= subprocess.call(['rm','-fr', kaiju_result_file])
                p4_7= subprocess.call(['rm','-fr', kaiju_report_file])
 
-        except:     
+        except:
            print "error,please check Kaiju"
 
 def run_kraken2(directory,out_dir,keep_kraken, db, krona, server_dir):
@@ -255,7 +255,7 @@ def run_kraken2(directory,out_dir,keep_kraken, db, krona, server_dir):
                     fastq_file_dict[key]=fastq_file
     for sample in sample_list:
         if(len(sample['sampleName'])==0 and len(sample['sequencerSampleId'])==0):
-           continue     
+           continue
         if(len(sample['sampleName'])>0):
             sample_name_t=sample['sampleName']
         else:
@@ -270,7 +270,7 @@ def run_kraken2(directory,out_dir,keep_kraken, db, krona, server_dir):
         try:
            kraken_result_file=run_analysis_folder+"/"+sample_name_t+"_kraken2.out"
            kraken_report_file=run_analysis_folder+"/"+sample_name_t+"_kraken2_report.txt"
-           statement = 'kraken2 --threads 10 --db '+db+' --report ' +kraken_report_file+ ' --output ' +kraken_result_file + ' --paired --gzip-compressed ' + fq_F +' ' +fq_R  
+           statement = 'kraken2 --threads 10 --db '+db+' --report ' +kraken_report_file+ ' --output ' +kraken_result_file + ' --paired --gzip-compressed ' + fq_F +' ' +fq_R
            subprocess.call([statement],shell=True)
            kraken_json_file=run_analysis_folder+"/"+sample_name_t+"_kraken2.js"
            with open(kraken_json_file, 'w') as output_file:
@@ -285,7 +285,7 @@ def run_kraken2(directory,out_dir,keep_kraken, db, krona, server_dir):
            if(keep_kraken is False):
                p3_6= subprocess.call(['rm','-fr', kraken_result_file])
                p3_7= subprocess.call(['rm','-fr', kraken_sorted_for_krona])
-        except:     
+        except:
            print "error,please check Kraken"
     try:
         cover(run_analysis_folder+"/", run_folder_name)
@@ -311,7 +311,7 @@ def run_kraken2_cluster(directory,out_dir,keep_kraken, db, krona, server_dir):
                     fastq_file_dict[key]=fastq_file
     for sample in sample_list:
         if(len(sample['sampleName'])==0 and len(sample['sequencerSampleId'])==0):
-           continue     
+           continue
         if(len(sample['sampleName'])>0):
             sample_name_t=sample['sampleName']
         else:
@@ -327,12 +327,12 @@ def run_kraken2_cluster(directory,out_dir,keep_kraken, db, krona, server_dir):
            kraken_result_file=run_analysis_folder+"/"+sample_name_t+"_kraken2.out"
            kraken_report_file=run_analysis_folder+"/"+sample_name_t+"_kraken2_report.txt"
            subprocess.call("qsub "+server_dir+"/Cluster/kraken2.sh " +kraken_report_file + " " +kraken_result_file + " " + fq_F + " " + fq_R+" "+server_dir+" "+db, shell = True )
-        except:     
+        except:
            print "error,please check Kraken"
     wait_until("sequdas_kraken2")
     for sample in sample_list:
         if(len(sample['sampleName'])==0 and len(sample['sequencerSampleId'])==0):
-           continue     
+           continue
         if(len(sample['sampleName'])>0):
             sample_name_t=sample['sampleName']
         else:
@@ -352,12 +352,12 @@ def run_kraken2_cluster(directory,out_dir,keep_kraken, db, krona, server_dir):
            kraken_sorted_for_krona=run_analysis_folder+"/"+sample_name_t+"_kraken2_krona.ini"
            krona_result_file=run_analysis_folder+"/"+sample_name_t+"_kraken2_krona.out.html"
            subprocess.call("qsub "+server_dir+"/Cluster/krona.sh " +kraken_json_file+ " "+ kraken_report_file+ " "+ kraken_sorted_for_krona+ " "+ kraken_result_file+ " "+ krona_result_file +" "+server_dir+" "+krona, shell = True)
-        except:     
+        except:
            print "error,please check Krona"
     wait_until("sequdas_krona")
     for sample in sample_list:
         if(len(sample['sampleName'])==0 and len(sample['sequencerSampleId'])==0):
-           continue     
+           continue
         if(len(sample['sampleName'])>0):
             sample_name_t=sample['sampleName']
         else:
@@ -392,8 +392,8 @@ def Upload_to_Irida(directory,irida):
             print "data has been submitted to IRIDA"
     except:
         print "Error! please check connection"
-        
-        
+
+
 
 #helper functions#############################################################
 
@@ -410,7 +410,7 @@ def get_genus_length(genus):
 #density functions
 
 #creates dictionary for reads(key) and lanes(values)
-#expects that density reading will follow third occurence of "," on a line 
+#expects that density reading will follow third occurence of "," on a line
 def create_dict(lines):
     density_list = []
     density_dict = {}
@@ -450,7 +450,7 @@ def get_value(string, substring, n):
             secondary_index += 1
         if (string[index:secondary_index]).isdigit():
             return string[index:secondary_index]
-            
+
 #get mean of all values in dict
 def get_mean(dict):
     temp_list = list(dict.values())
@@ -465,7 +465,7 @@ def read_file_inline(string):
         for line in in_file:
             lines.append(line.replace(' ', ''))
     return lines
-        
+
 #coverage functions
 #Create list of dictionaries for information on each sample, contains...
 #Read_length, coverage_estimation, sample_number, sample_id, genus_length, genus, number_of_reads
@@ -644,7 +644,7 @@ def cover(name,coverage):
                         value = "Genus in sample sheet was not found, however Kraken2 estimted coverage as: "+ str(coverage_est)
             dict[key] = value
         new.append(dict)
-    with open(name+coverage+"_coverage.txt", 'w') as outfile: 
+    with open(name+coverage+"_coverage.txt", 'w') as outfile:
         json.dump(new, outfile)
 
 #parse kraken report for genus
@@ -689,7 +689,7 @@ def filter_sheet(input_dir, output_dir):
             os.rename(out + '/newfile.csv',out + '/SampleSheet.csv')
     except:
         ""
-        
+
 #check that cluster job has finished
 def wait_until(job):
     regex = ur"<JB_name>(.+?)</JB_name>+?"

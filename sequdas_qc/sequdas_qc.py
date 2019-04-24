@@ -66,8 +66,6 @@ def main(argv = None):
     email_list=email_list_admin
     server_dir = s_config['basic']['server_dir']
     db = s_config['kraken']['db']
-    krona = s_config['conda']['krona']
-    interop = s_config['conda']['interop']
     irida = s_config['uploader']['irida']
     db_config = {
         'passwd': s_config['mysql_account']['mysql_passwd'],
@@ -99,7 +97,7 @@ def main(argv = None):
     #################################
     if(step_id==1):
         try:
-            run_machine_QC(input_dir,out_dir,interop)
+            run_machine_QC(input_dir,out_dir)
             filter_sheet(input_dir,out_dir)
             copy_reporter(out_dir,run_name)
             status=1
@@ -195,14 +193,14 @@ def main(argv = None):
     if(step_id==6):
         if cluster == True:
             try:
-                run_kraken2_cluster(input_dir,out_dir,keep_kraken,db,krona,server_dir)
+                run_kraken2_cluster(input_dir,out_dir,keep_kraken,db,server_dir)
                 copy_reporter(out_dir,run_name)
                 status=1
             except:
                 status=0
         if cluster == False:
             try:
-                run_kraken2(input_dir,out_dir,keep_kraken, db, krona, server_dir)
+                run_kraken2(input_dir,out_dir,keep_kraken, db, server_dir)
                 copy_reporter(out_dir,run_name)
                 status=1
             except:
