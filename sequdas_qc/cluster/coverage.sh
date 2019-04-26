@@ -5,4 +5,4 @@
 #$ -pe smp 7
 #$ -l h_vmem=100G
 
-python $6/Cluster/coverage.py $1 $2 $3 $4 $5
+python $6/cluster/coverage.py $1 $2 $3 $4 $5
