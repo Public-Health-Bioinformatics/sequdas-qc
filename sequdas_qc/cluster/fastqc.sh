@@ -5,5 +5,5 @@
 #$ -pe smp 7
 #$ -l h_vmem=100G
 
-python $3/Cluster/fastqc.py $1 $2
+python $3/cluster/fastqc.py $1 $2
 

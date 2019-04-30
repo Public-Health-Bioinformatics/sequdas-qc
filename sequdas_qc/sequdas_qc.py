@@ -66,9 +66,8 @@ def main(argv = None):
     email_list=email_list_admin
     server_dir = s_config['basic']['server_dir']
     db = s_config['kraken']['db']
-    krona = s_config['conda']['krona']
-    interop = s_config['conda']['interop']
     irida = s_config['uploader']['irida']
+    env_dir = s_config['basic']['env_dir']
     db_config = {
         'passwd': s_config['mysql_account']['mysql_passwd'],
         'host': s_config['mysql_account']['mysql_host'],
@@ -99,7 +98,7 @@ def main(argv = None):
     #################################
     if(step_id==1):
         try:
-            run_machine_QC(input_dir,out_dir,interop)
+            run_machine_QC(input_dir,out_dir)
             filter_sheet(input_dir,out_dir)
             copy_reporter(out_dir,run_name)
             status=1
@@ -117,16 +116,16 @@ def main(argv = None):
             step_id=step_id+1
         filter_sheet(input_dir,out_dir)
     if(step_id==2):
-        if cluster == True:
+        if cluster == "True":
             try:
-                run_fastqc_cluster(input_dir,out_dir,server_dir)
+                run_fastqc_cluster(input_dir,out_dir,server_dir, config_file_path)
                 copy_reporter(out_dir,run_name)
                 status=1
             except:
                 status=0
-        if cluster == False:
+        else:
             try:
-                run_fastqc(input_dir,out_dir,server_dir)
+                run_fastqc(input_dir,out_dir,server_dir, config_file_path)
                 copy_reporter(out_dir,run_name)
                 status=1
             except:
@@ -158,51 +157,51 @@ def main(argv = None):
             status_update(sequdas_id,step_id,status)  
         if run_style is True:
             step_id=step_id+1         
+    # if(step_id==4):
+        # try:
+            # run_kraken(input_dir,out_dir,keep_kraken)
+            # copy_reporter(out_dir,run_name)
+            # status=1
+        # except:
+            # status=0
+        # update_pipe_status(logfile,run_name,str(step_id),status)
+        # if log_details is True:
+            # if (status==1):
+               # logger.info("step"+str(step_id)+" has been finished"+"\n")
+            # else:
+               # logger.info("There is something wrong with step"+str(step_id)+" . Please check!"+"\n")
+        # if len(sequdas_id)>0:
+            # status_update(sequdas_id,step_id,status)            
+        # if run_style is True:
+            # step_id=step_id+1
+    # if(step_id==5):
+        # try:
+            # run_kaiju(input_dir,out_dir,keep_kraken)
+            # copy_reporter(out_dir,run_name)
+            # status=1
+        # except:
+            # status=0
+        # update_pipe_status(logfile,run_name,str(step_id),status)
+        # if log_details is True:
+            # if (status==1):
+               # logger.info("step"+str(step_id)+" has been finished"+"\n")
+            # else:
+               # logger.info("There is something wrong with step"+str(step_id)+" . Please check!"+"\n")
+        # if len(sequdas_id)>0:
+            # status_update(sequdas_id,step_id,status)            
+        # if run_style is True:
+            # step_id=step_id+1
     if(step_id==4):
-        try:
-            run_kraken(input_dir,out_dir,keep_kraken)
-            copy_reporter(out_dir,run_name)
-            status=1
-        except:
-            status=0
-        update_pipe_status(logfile,run_name,str(step_id),status)
-        if log_details is True:
-            if (status==1):
-               logger.info("step"+str(step_id)+" has been finished"+"\n")
-            else:
-               logger.info("There is something wrong with step"+str(step_id)+" . Please check!"+"\n")
-        if len(sequdas_id)>0:
-            status_update(sequdas_id,step_id,status)            
-        if run_style is True:
-            step_id=step_id+1
-    if(step_id==5):
-        try:
-            run_kaiju(input_dir,out_dir,keep_kraken)
-            copy_reporter(out_dir,run_name)
-            status=1
-        except:
-            status=0
-        update_pipe_status(logfile,run_name,str(step_id),status)
-        if log_details is True:
-            if (status==1):
-               logger.info("step"+str(step_id)+" has been finished"+"\n")
-            else:
-               logger.info("There is something wrong with step"+str(step_id)+" . Please check!"+"\n")
-        if len(sequdas_id)>0:
-            status_update(sequdas_id,step_id,status)            
-        if run_style is True:
-            step_id=step_id+1
-    if(step_id==6):
-        if cluster == True:
+        if cluster == "True":
             try:
-                run_kraken2_cluster(input_dir,out_dir,keep_kraken,db,krona,server_dir)
+                run_kraken2_cluster(input_dir,out_dir,keep_kraken,db,server_dir, env_dir)
                 copy_reporter(out_dir,run_name)
                 status=1
             except:
                 status=0
-        if cluster == False:
+        else:
             try:
-                run_kraken2(input_dir,out_dir,keep_kraken, db, krona, server_dir)
+                run_kraken2(input_dir,out_dir,keep_kraken, db, server_dir, env_dir)
                 copy_reporter(out_dir,run_name)
                 status=1
             except:
@@ -217,7 +216,7 @@ def main(argv = None):
             status_update(sequdas_id,step_id,status)            
         if run_style is True:
             step_id=step_id+1
-    if(step_id==7 and run_uploader is True):
+    if(step_id==5 and run_uploader is True):
         try:
             filter_sheet(input_dir,out_dir)
             Upload_to_Irida(input_dir, irida)
