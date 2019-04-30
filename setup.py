@@ -4,7 +4,7 @@ setup (
     name='sequdas_qc',
     version='0.2',
     description='Sequence Upload and Data Archiving System',
-    url='https://github.com/MichaelGerg/sequdas-qc',
+    url='https://github.com/Public-Health-Bioinformatics/sequdas-qc',
     author='Jun Duan',
     author_email='duanjun1981@gmail.com',
     licence='MIT',
@@ -17,7 +17,7 @@ setup (
     	]
     },
     project_urls={
-        "Source Code": "https://github.com/MichaelGerg/sequdas-qc",
-        "Documentation": "https://github.com/MichaelGerg/sequdas-qc",
+        "Source Code": "https://github.com/Public-Health-Bioinformatics/sequdas-qc",
+        "Documentation": "https://github.com/Public-Health-Bioinformatics/sequdas-qc",
     }
 )
